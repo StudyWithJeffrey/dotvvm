@@ -74,6 +74,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.TryAddSingleton<IViewModelProtector, DefaultViewModelProtector>();
             services.TryAddSingleton<IEnvironmentNameProvider, DotvvmEnvironmentNameProvider>();
             services.TryAddSingleton<IRequestCancellationTokenProvider, RequestCancellationTokenProvider>();
+            services.TryAddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
             services.TryAddScoped<DotvvmRequestContextStorage>(_ => new DotvvmRequestContextStorage());
             services.TryAddScoped<IDotvvmRequestContext>(s => s.GetRequiredService<DotvvmRequestContextStorage>().Context);
             services.AddSingleton<IDotvvmViewCompilationService, DotvvmViewCompilationService>();
