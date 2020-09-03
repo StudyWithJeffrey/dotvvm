@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using DotVVM.Framework.ResourceManagement;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DotVVM.Framework.ViewModel.Serialization
 {
@@ -26,6 +27,7 @@ namespace DotVVM.Framework.ViewModel.Serialization
         private readonly IViewModelProtector viewModelProtector;
         private readonly IViewModelSerializationMapper viewModelMapper;
         private readonly IViewModelServerCache viewModelServerCache;
+        private readonly ISerializerSettingsProvider serializerSettingsProvider;
 
         public bool SendDiff { get; set; } = true;
 
@@ -41,6 +43,7 @@ namespace DotVVM.Framework.ViewModel.Serialization
             this.JsonFormatting = configuration.Debug ? Formatting.Indented : Formatting.None;
             this.viewModelMapper = serializationMapper;
             this.viewModelServerCache = viewModelServerCache;
+            this.serializerSettingsProvider = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>();
         }
 
         /// <summary>
@@ -152,17 +155,7 @@ namespace DotVVM.Framework.ViewModel.Serialization
             return response.ToString(JsonFormatting);
         }
 
-        public static JsonSerializerSettings CreateDefaultSettings()
-        {
-            var s = new JsonSerializerSettings() {
-                DateTimeZoneHandling = DateTimeZoneHandling.Unspecified
-            };
-            s.Converters.Add(new DotvvmDateTimeConverter());
-            s.Converters.Add(new StringEnumConverter());
-            return s;
-        }
-
-        protected virtual JsonSerializer CreateJsonSerializer() => CreateDefaultSettings().Apply(JsonSerializer.Create);
+        protected virtual JsonSerializer CreateJsonSerializer() => serializerSettingsProvider.Settings.Apply(JsonSerializer.Create);
 
         public JObject BuildResourcesJson(IDotvvmRequestContext context, Func<string, bool> predicate)
         {

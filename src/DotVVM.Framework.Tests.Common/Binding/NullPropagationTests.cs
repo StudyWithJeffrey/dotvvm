@@ -10,12 +10,23 @@ using DotVVM.Framework.Utils;
 using DotVVM.Framework.Compilation.Binding;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using DotVVM.Framework.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DotVVM.Framework.Tests.Common.Binding
 {
     [TestClass]
     public class NullPropagationTests
     {
+        private DotvvmConfiguration configuration;
+
+        [TestInitialize]
+        public void TestInit()
+        {
+            configuration = DotvvmConfiguration.CreateDefault(services => {
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
+            });
+        }
 
         private LambdaExpression[] ExpressionFragments = new LambdaExpression[] {
             Create((TestViewModel t) => t.EnumProperty - 1),
@@ -125,7 +136,8 @@ namespace DotVVM.Framework.Tests.Common.Binding
             var withoutNullChecks = compile(expr);
 
             var args = Enumerable.Repeat(new TestViewModel { StringProp = "ll", StringProp2 = "pp", TestViewModel2 = new TestViewModel2() }, count).ToArray();
-            Assert.AreEqual(JsonConvert.SerializeObject(withNullCheks(args)), JsonConvert.SerializeObject(withoutNullChecks(args)));
+            var settings = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>().Settings;
+            Assert.AreEqual(JsonConvert.SerializeObject(withNullCheks(args), settings), JsonConvert.SerializeObject(withoutNullChecks(args), settings));
 
             foreach (var i in Enumerable.Range(0, args.Length).Shuffle(rnd))
             {

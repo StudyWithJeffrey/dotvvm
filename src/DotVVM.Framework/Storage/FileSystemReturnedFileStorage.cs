@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using DotVVM.Framework.Configuration;
 using DotVVM.Framework.Utils;
 using Newtonsoft.Json;
 
@@ -30,12 +31,15 @@ namespace DotVVM.Framework.Storage
         /// </summary>
         private readonly Timer _autoDeleteTimer;
 
+        private readonly ISerializerSettingsProvider serializerSettingsProvider;
+
 
         /// <summary>
         /// Initializes new instance of <see cref="FileSystemReturnedFileStorage"/> class with default interval for deleting old files.
         /// </summary>
         /// <param name="directory">Temp directory for storing files.</param>
-        public FileSystemReturnedFileStorage(string directory) : this(directory, new TimeSpan(0, 5, 0))
+        public FileSystemReturnedFileStorage(string directory, ISerializerSettingsProvider serializerSettingsProvider)
+            : this(directory, new TimeSpan(0, 5, 0), serializerSettingsProvider)
         {
         }
 
@@ -44,7 +48,7 @@ namespace DotVVM.Framework.Storage
         /// </summary>
         /// <param name="directory">Temp directory for storing files.</param>
         /// <param name="autoDeleteInterval">Interval for deleting old files.</param>
-        public FileSystemReturnedFileStorage(string directory, TimeSpan autoDeleteInterval)
+        public FileSystemReturnedFileStorage(string directory, TimeSpan autoDeleteInterval, ISerializerSettingsProvider serializerSettingsProvider)
         {
             if (string.IsNullOrEmpty(directory))
             {
@@ -60,6 +64,7 @@ namespace DotVVM.Framework.Storage
             AutoDeleteInterval = autoDeleteInterval;
 
             _autoDeleteTimer = new Timer(state => DeleteOldFiles(DateTime.Now - AutoDeleteInterval), null, AutoDeleteInterval, AutoDeleteInterval);
+            this.serializerSettingsProvider = serializerSettingsProvider;
         }
 
         private Guid GenerateFileId()
@@ -83,7 +88,7 @@ namespace DotVVM.Framework.Storage
         private void StoreMetadata(Guid id, ReturnedFileMetadata metadata)
         {
             var metadataFilePath = GetMetadataFilePath(id);
-            File.WriteAllText(metadataFilePath, JsonConvert.SerializeObject(metadata), Encoding.UTF8);
+            File.WriteAllText(metadataFilePath, JsonConvert.SerializeObject(metadata, serializerSettingsProvider.Settings), Encoding.UTF8);
         }
 
         private string GetDataFilePath(Guid id)

@@ -5,8 +5,10 @@ using System.Linq;
 using DotVVM.Framework.Binding;
 using DotVVM.Framework.Binding.Expressions;
 using DotVVM.Framework.Compilation.Parser;
+using DotVVM.Framework.Configuration;
 using DotVVM.Framework.Hosting;
 using DotVVM.Framework.ViewModel.Serialization;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace DotVVM.Framework.Controls
@@ -65,10 +67,11 @@ namespace DotVVM.Framework.Controls
 
         protected override void RenderContents(IHtmlWriter writer, IDotvvmRequestContext context)
         {
+            var serializerSettingsProvider = context.Services.GetRequiredService<ISerializerSettingsProvider>();
             var properties =
                 GetDeclaredProperties()
                 .Where(p => !p.DeclaringType.IsAssignableFrom(typeof(DotvvmMarkupControl)))
-                .Select(GetPropertySerializationInfo)
+                .Select(p => GetPropertySerializationInfo(p, serializerSettingsProvider))
                 .Where(p => p.Js is object)
                 .Select(p => JsonConvert.ToString(p.Property.Name, '"', StringEscapeHandling.EscapeHtml) + ": " + p.Js);
 
@@ -77,11 +80,11 @@ namespace DotVVM.Framework.Controls
             writer.WriteKnockoutDataBindEndComment();
         }
 
-        private PropertySerializeInfo GetPropertySerializationInfo(DotvvmProperty property)
+        private PropertySerializeInfo GetPropertySerializationInfo(DotvvmProperty property, ISerializerSettingsProvider serializerSettingsProvider)
         {
             if (ContainsPropertyStaticValue(property))
             {
-                JsonSerializerSettings settings = DefaultViewModelSerializer.CreateDefaultSettings();
+                var settings = serializerSettingsProvider.Settings;
                 settings.StringEscapeHandling = StringEscapeHandling.EscapeHtml;
 
                 return new PropertySerializeInfo(

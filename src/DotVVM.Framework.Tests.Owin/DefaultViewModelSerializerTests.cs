@@ -40,6 +40,7 @@ namespace DotVVM.Framework.Tests.Runtime
                 services.AddTransient<ICsrfProtector, DefaultCsrfProtector>();
                 services.AddSingleton<ICookieManager, ChunkingCookieManager>();
                 services.AddSingleton<IDotvvmCacheAdapter, DefaultDotvvmCacheAdapter>();
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
             });
 			configuration.Security.SigningKey = Convert.FromBase64String("Uiq1FXs016lC6QaWIREB7H2P/sn4WrxkvFkqaIKpB27E7RPuMipsORgSgnT+zJmUu8zXNSJ4BdL73JEMRDiF6A1ScRNwGyDxDAVL3nkpNlGrSoLNM1xHnVzSbocLFDrdEiZD2e3uKujguycvWSNxYzjgMjXNsaqvCtMu/qRaEGc=");
 			configuration.Security.EncryptionKey = Convert.FromBase64String("jNS9I3ZcxzsUSPYJSwzCOm/DEyKFNlBmDGo9wQ6nxKg=");

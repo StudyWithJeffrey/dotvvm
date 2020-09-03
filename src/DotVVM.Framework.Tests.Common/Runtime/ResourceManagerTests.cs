@@ -10,12 +10,23 @@ using DotVVM.Framework.ResourceManagement.ClientGlobalize;
 using System.Globalization;
 using DotVVM.Framework.Compilation.Parser;
 using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DotVVM.Framework.Tests.Runtime
 {
     [TestClass]
     public class ResourceManagerTests
     {
+        private DotvvmConfiguration configuration;
+
+        [TestInitialize]
+        public void TestInit()
+        {
+            configuration = DotvvmConfiguration.CreateDefault(services => {
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
+            });
+        }
+
         [TestMethod]
         public void ResourceManager_SimpleTest()
         {
@@ -72,8 +83,9 @@ namespace DotVVM.Framework.Tests.Runtime
             config1.Resources.Register("rs7", new PolyfillResource(){ RenderPosition =  ResourceRenderPosition.Head});
             config1.Resources.Register("rs8", new ScriptResource(new JQueryGlobalizeResourceLocation(CultureInfo.GetCultureInfo("en-US"))));
 
-            // serialize & deserialize
-            JsonSerializerSettings settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+            // serialize & 
+            var settings = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>().Settings;
+            settings.TypeNameHandling = TypeNameHandling.Auto;
             var config2 = JsonConvert.DeserializeObject<DotvvmConfiguration>(JsonConvert.SerializeObject(config1, settings), settings);
 
             //test 

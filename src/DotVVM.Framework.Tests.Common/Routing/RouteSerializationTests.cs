@@ -7,6 +7,7 @@ using DotVVM.Framework.Configuration;
 using DotVVM.Framework.Hosting;
 using DotVVM.Framework.ResourceManagement;
 using DotVVM.Framework.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json;
 
@@ -15,7 +16,17 @@ namespace DotVVM.Framework.Tests.Common.Routing
     [TestClass]
     public class RouteSerializationTests
     {
-        [TestMethod]
+        private DotvvmConfiguration configuration;
+
+        [TestInitialize]
+        public void TestInit()
+        {
+            configuration = DotvvmConfiguration.CreateDefault(services => {
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
+            });
+        }
+
+                [TestMethod]
         public void RouteTable_Deserialization()
         {
             DotvvmTestHelper.EnsureCompiledAssemblyCache();
@@ -29,7 +40,8 @@ namespace DotVVM.Framework.Tests.Common.Routing
             typeof(RouteBase).GetProperty("Url").SetMethod.Invoke(r, new[] { "url3/{a:unsuppotedConstraint}" });
             config1.RouteTable.Add("route3", r);
 
-            var settings = new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto };
+            var settings = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>().Settings;
+            settings.TypeNameHandling = TypeNameHandling.Auto;
             var config2 = JsonConvert.DeserializeObject<DotvvmConfiguration>(JsonConvert.SerializeObject(config1, settings), settings);
 
             Assert.AreEqual(config2.RouteTable["route1"].Url, "url1");

@@ -78,7 +78,8 @@ namespace Microsoft.Extensions.DependencyInjection
             services.Services.TryAddSingleton<IReturnedFileStorage>(s =>
             {
                 var fullPath = Path.Combine(s.GetRequiredService<DotvvmConfiguration>().ApplicationPhysicalPath, tempPath);
-                return new FileSystemReturnedFileStorage(fullPath, autoDeleteInterval);
+                var serializerSettingsProvider = s.GetRequiredService<ISerializerSettingsProvider>();
+                return new FileSystemReturnedFileStorage(fullPath, autoDeleteInterval, serializerSettingsProvider);
             });
             return services;
         }

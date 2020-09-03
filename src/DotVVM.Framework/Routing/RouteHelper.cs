@@ -95,7 +95,7 @@ namespace DotVVM.Framework.Routing
 
             if (invalidControls.Any() || invalidRoutes.Any())
             {
-                throw new DotvvmConfigurationException(invalidRoutes, invalidControls);
+                throw new DotvvmConfigurationException(config, invalidRoutes, invalidControls);
             }
 
 

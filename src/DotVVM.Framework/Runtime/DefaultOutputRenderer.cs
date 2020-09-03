@@ -11,11 +11,19 @@ using DotVVM.Framework.Controls.Infrastructure;
 using DotVVM.Framework.Hosting;
 using DotVVM.Framework.Binding;
 using System.Text;
+using DotVVM.Framework.Configuration;
 
 namespace DotVVM.Framework.Runtime
 {
     public class DefaultOutputRenderer : IOutputRenderer
     {
+        private readonly ISerializerSettingsProvider serializerSettingsProvider;
+
+        public DefaultOutputRenderer(ISerializerSettingsProvider serializerSettingsProvider)
+        {
+            this.serializerSettingsProvider = serializerSettingsProvider;
+        }
+
         protected virtual MemoryStream RenderPage(IDotvvmRequestContext context, DotvvmView view)
         {
             var outStream = new MemoryStream();
@@ -103,7 +111,7 @@ namespace DotVVM.Framework.Runtime
             context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Response.ContentType = "application/json; charset=utf-8";
             SetCacheHeaders(context);
-            await context.Response.WriteAsync(JsonConvert.SerializeObject(data));
+            await context.Response.WriteAsync(JsonConvert.SerializeObject(data, serializerSettingsProvider.Settings));
         }
 
         public virtual async Task RenderHtmlResponse(IHttpContext context, string html)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using DotVVM.Framework.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 
 namespace DotVVM.Framework.Configuration
@@ -19,15 +20,16 @@ namespace DotVVM.Framework.Configuration
         {
         }
 
-        internal DotvvmConfigurationException(List<DotvvmConfigurationAssertResult<RouteBase>> routes, List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls) : base(message: BuildMessage(routes, controls))
+        internal DotvvmConfigurationException(DotvvmConfiguration configuration, List<DotvvmConfigurationAssertResult<RouteBase>> routes, List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls)
+            : base(message: BuildMessage(configuration, routes, controls))
         {
         }
 
-        private static string BuildMessage(List<DotvvmConfigurationAssertResult<RouteBase>> routes, List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls)
+        private static string BuildMessage(DotvvmConfiguration configuration, List<DotvvmConfigurationAssertResult<RouteBase>> routes, List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls)
         {
             var sb = new StringBuilder();
             BuildRoutesMessage(routes, sb);
-            BuildControlsMessage(controls, sb);
+            BuildControlsMessage(configuration, controls, sb);
             return sb.ToString();
         }
 
@@ -65,8 +67,9 @@ namespace DotVVM.Framework.Configuration
             }
         }
 
-        private static void BuildControlsMessage(List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls, StringBuilder sb)
+        private static void BuildControlsMessage(DotvvmConfiguration configuration, List<DotvvmConfigurationAssertResult<DotvvmControlConfiguration>> controls, StringBuilder sb)
         {
+            var serializationSettingsProvider = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>();
             if (controls != null && controls.Any())
             {
                 sb.AppendLine("Invalid control registrations: ");
@@ -75,7 +78,7 @@ namespace DotVVM.Framework.Configuration
                     if (control.Reason == DotvvmConfigurationAssertReason.InvalidCombination)
                     {
                         sb.Append("Control '");
-                        sb.Append(JsonConvert.SerializeObject(control.Value));
+                        sb.Append(JsonConvert.SerializeObject(control.Value, serializationSettingsProvider.Settings));
                         sb.Append("' has set invalid combination of properties.");
                     }
 

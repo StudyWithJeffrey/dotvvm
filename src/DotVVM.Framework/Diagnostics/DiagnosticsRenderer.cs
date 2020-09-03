@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Threading.Tasks;
+using DotVVM.Framework.Configuration;
 using DotVVM.Framework.Controls.Infrastructure;
 using DotVVM.Framework.Hosting;
 using DotVVM.Framework.Runtime;
@@ -13,6 +14,12 @@ namespace DotVVM.Framework.Diagnostics
 {
     class DiagnosticsRenderer : DefaultOutputRenderer
     {
+        public DiagnosticsRenderer(ISerializerSettingsProvider serializerSettingsProvider)
+            : base(serializerSettingsProvider)
+        {
+
+        }
+
         protected override MemoryStream RenderPage(IDotvvmRequestContext context, DotvvmView view)
         {
             var html = base.RenderPage(context, view);

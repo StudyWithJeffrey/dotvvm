@@ -9,12 +9,27 @@ using System.Collections.Generic;
 using System.Linq;
 using DotVVM.Framework.ViewModel;
 using DotVVM.Framework.Compilation.Parser;
+using DotVVM.Framework.Configuration;
 
 namespace DotVVM.Framework.Tests.Common.ViewModel
 {
     [TestClass]
     public class SerializerTests
     {
+        private DotvvmConfiguration configuration;
+        private ISerializerSettingsProvider serializerSettingsProvider;
+
+        [TestInitialize]
+        public void Initialize()
+        {
+            this.configuration = DotvvmConfiguration.CreateDefault(services =>
+            {
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
+            });
+
+            this.serializerSettingsProvider = configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>();
+        }
+
         static ViewModelJsonConverter CreateConverter(bool isPostback, JObject encryptedValues = null)
         {
             var config = DotvvmTestHelper.DefaultConfig;
@@ -28,10 +43,10 @@ namespace DotVVM.Framework.Tests.Common.ViewModel
             };
         }
 
-        static string Serialize<T>(T viewModel, out JObject encryptedValues, bool isPostback = false)
+        string Serialize<T>(T viewModel, out JObject encryptedValues, bool isPostback = false)
         {
             encryptedValues = new JObject();
-            var serializer = JsonSerializer.Create(DefaultViewModelSerializer.CreateDefaultSettings());
+            var serializer = JsonSerializer.Create(serializerSettingsProvider.Settings);
             serializer.Converters.Add(CreateConverter(isPostback, encryptedValues));
 
             var output = new StringWriter();
@@ -39,9 +54,9 @@ namespace DotVVM.Framework.Tests.Common.ViewModel
             return output.ToString();
         }
 
-        static T Populate<T>(string json, JObject encryptedValues = null)
+        T Populate<T>(string json, JObject encryptedValues = null)
         {
-            var serializer = JsonSerializer.Create(DefaultViewModelSerializer.CreateDefaultSettings());
+            var serializer = JsonSerializer.Create(serializerSettingsProvider.Settings);
             serializer.Converters.Add(CreateConverter(true, encryptedValues));
 
             //serializer.Populate(new StringReader(json), viewModel);

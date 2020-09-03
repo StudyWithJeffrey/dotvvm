@@ -22,9 +22,11 @@ namespace DotVVM.Framework.Hosting.Middlewares
         private static readonly Regex wildcardMimeTypeRegex = new Regex(@"/\*$");
         private readonly IOutputRenderer outputRenderer;
         private readonly IUploadedFileStorage fileStorage;
+        private readonly ISerializerSettingsProvider serializerSettingsProvider;
 
-        public DotvvmFileUploadMiddleware(IOutputRenderer outputRenderer, IUploadedFileStorage fileStorage)
+        public DotvvmFileUploadMiddleware(IOutputRenderer outputRenderer, IUploadedFileStorage fileStorage, ISerializerSettingsProvider serializerSettingsProvider)
         {
+            this.serializerSettingsProvider = serializerSettingsProvider;
             this.outputRenderer = outputRenderer;
             this.fileStorage = fileStorage;
         }
@@ -33,8 +35,9 @@ namespace DotVVM.Framework.Hosting.Middlewares
         {
             var renderer = provider.GetRequiredService<IOutputRenderer>();
             var fileStorage = provider.GetService<IUploadedFileStorage>();
+            var serializerSettingsProvider = provider.GetRequiredService<ISerializerSettingsProvider>();
             if (fileStorage != null)
-                return new DotvvmFileUploadMiddleware(renderer, fileStorage);
+                return new DotvvmFileUploadMiddleware(renderer, fileStorage, serializerSettingsProvider);
             else
                 return null;
         }
@@ -105,7 +108,7 @@ namespace DotVVM.Framework.Hosting.Middlewares
                     if (context.Request.Query["iframe"] == "true")
                     {
                         // IE will otherwise try to download the response as JSON file
-                        await outputRenderer.RenderPlainTextResponse(context, JsonConvert.SerializeObject(uploadedFiles));
+                        await outputRenderer.RenderPlainTextResponse(context, JsonConvert.SerializeObject(uploadedFiles, serializerSettingsProvider.Settings));
                     }
                     else
                     {
@@ -132,12 +135,12 @@ namespace DotVVM.Framework.Hosting.Middlewares
                     if (string.IsNullOrEmpty(errorMessage))
                     {
                         template.StartupScript = string.Format("reportProgress(false, 100, {0})",
-                            JsonConvert.SerializeObject(uploadedFiles));
+                            JsonConvert.SerializeObject(uploadedFiles, serializerSettingsProvider.Settings));
                     }
                     else
                     {
                         template.StartupScript = string.Format("reportProgress(false, 100, {0})",
-                            JsonConvert.SerializeObject(errorMessage));
+                            JsonConvert.SerializeObject(errorMessage, serializerSettingsProvider.Settings));
                     }
                 }
 
