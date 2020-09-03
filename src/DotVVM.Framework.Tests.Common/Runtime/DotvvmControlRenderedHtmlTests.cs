@@ -4,6 +4,7 @@ using System.IO;
 using DotVVM.Framework.Binding;
 using DotVVM.Framework.Binding.Expressions;
 using DotVVM.Framework.Compilation.ControlTree;
+using DotVVM.Framework.Configuration;
 using DotVVM.Framework.Controls;
 using DotVVM.Framework.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +16,19 @@ namespace DotVVM.Framework.Tests.Runtime
     [TestClass]
     public class DotvvmControlRenderedHtmlTests : DotvvmControlTestBase
     {
+        private DotvvmConfiguration configuration;
+
+        [TestInitialize]
+        public void TestInit()
+        {
+            configuration = DotvvmConfiguration.CreateDefault(services => {
+                services.AddSingleton<ISerializerSettingsProvider, DefaultSerializerSettingsProvider>();
+            });
+
+            // Make sure the service gets instantiated
+            configuration.ServiceProvider.GetRequiredService<ISerializerSettingsProvider>();
+        }
+
         [TestMethod]
         public void GridViewTextColumn_RenderedHtmlTest_ServerRendering()
         {
@@ -99,7 +113,7 @@ namespace DotVVM.Framework.Tests.Runtime
                         }
                     }
                 }
-            }, CreateContext(viewModel));
+            }, CreateContext(viewModel, configuration));
 
             Assert.IsTrue(clientHtml.Contains("<elem1"));
             Assert.IsTrue(clientHtml.Contains("<elem2"));
@@ -147,7 +161,7 @@ namespace DotVVM.Framework.Tests.Runtime
                         }
                     }
                 }
-            }, CreateContext(viewModel));
+            }, CreateContext(viewModel, configuration));
 
             Assert.IsTrue(clientHtml.Contains("<elem1"));
             Assert.IsTrue(clientHtml.Contains("<elem2"));
